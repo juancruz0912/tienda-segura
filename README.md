@@ -2,7 +2,7 @@
 
 Laboratorio independiente del trabajo de Logs. Sigue `../caso_practico_ci.md`: una aplicación Express pequeña y un pipeline de GitHub Actions que se dispara al abrir o actualizar una pull request.
 
-## Etapa actual: app y primer pipeline
+## Estado actual: paso 3 fusionado y fallas preparadas
 
 La app exporta `total(precio, cant, desc)` y una ruta GET `/total`. Ejecutar desde esta carpeta:
 
@@ -11,30 +11,33 @@ npm ci
 npm test
 ```
 
-El workflow de `.github/workflows/pipeline.yml` actualmente solo ejecuta `npm ci` y `npm test` en cada PR, como pide el paso 2 del taller. Incluye `setup-node` con Node 22 para no depender de la versión preinstalada en `ubuntu-latest`. `CI/pipeline.yml` (un nivel arriba) es la referencia del profesor, no el workflow que ejecuta GitHub.
+La PR #1 del paso 2 se fusionó en `main` (`e9cb4dd`). La PR #2 fusionó las puertas de seguridad (`8772892`): `npm audit --audit-level=high`, Semgrep (`p/javascript`) y Gitleaks, con Node 22 y Python 3.12. El check `verificar` terminó en verde. `CI/pipeline.yml` (un nivel arriba) es la referencia del profesor, no el workflow que ejecuta GitHub.
 
-## Orden de publicación y demostración
+El `main` local quedó actualizado en `8772892`.
 
-1. **App inicial en `main`:** publicar `app.js`, `app.test.js`, `package.json`, `package-lock.json`, `.gitignore` y este README. El workflow ya está creado localmente, pero dejarlo **sin incluir en este primer commit** para preservar la PR del paso 2.
+## Fallas preparadas
 
-   ```bash
-   git add .gitignore app.js app.test.js package.json package-lock.json README.md
-   git commit -m "App inicial con un test"
-   git push origin main
-   ```
+Se publicaron cuatro ramas independientes desde `main`, sin mezclar la documentación:
 
-2. Desde `main` actualizado, crear la rama `paso-2-pipeline`, publicar el workflow inicial y abrir una PR. Confirmar el check `verificar` verde antes de fusionarla.
+| Rama | Falla introducida | Puerta que debe fallar |
+| --- | --- | --- |
+| `falla-test` | `(1 + desc)` en el cálculo del descuento | `npm test` |
+| `falla-secreto` | Token ficticio `ghp_...` en `app.js` | Gitleaks |
+| `falla-codigo` | Ruta `/eval` que ejecuta `eval(expr)` | Semgrep |
+| `falla-libreria` | `lodash` fijado en `4.17.15` | `npm audit` |
 
-   ```bash
-   git switch -c paso-2-pipeline
-   git add .github/workflows/pipeline.yml
-   git commit -m "Primer pipeline: solo tests"
-   git push -u origin paso-2-pipeline
-   ```
+La falla de `falla-test` se comprobó localmente: `node --test app.test.js` devuelve `300 !== 100`. La de `falla-libreria` también: `npm audit --audit-level=high` termina con código 1 y una vulnerabilidad alta. Las puertas de las otras dos se deben confirmar en GitHub.
 
-   En GitHub, abrir una PR de `paso-2-pipeline` hacia `main` y revisar la pestaña **Checks/Actions**. Fusionarla cuando `verificar` pase y actualizar `main` local antes de la siguiente rama.
-3. En otra rama/PR `paso-3-puertas`, incorporar `npm audit --audit-level=high`, Semgrep y Gitleaks y verificar que la app sana siga verde. El ejemplo YAML del paso 3 en la guía tiene errores de sangría; partir del workflow válido del repositorio.
-4. Habilitar una regla de `main` que exija el check `verificar`. Hacer cuatro PR independientes con fallas: token ficticio, `eval`, `lodash@4.17.15` y signo de descuento incorrecto. Verificar que el botón de fusión se bloquee ante un check rojo; corregir y fusionar tres PR y cerrar la del token sin fusionar.
-5. Añadir y demostrar los retos Trivy (configuración Dockerfile) y ZAP (app ejecutándose) en PR posteriores. Para ZAP arrancar un servidor separado, sin hacer que `node --test` quede escuchando indefinidamente.
+## Siguiente orden
 
-Todavía **no se han ejecutado checks en GitHub**, ni se configuró la regla de fusión, ni se crearon las PR de fallas. Las capturas y URLs de cada PR/check deben registrarse al realizarlas.
+1. Configurar una regla de `main` que exija el check `verificar` antes de fusionar. En GitHub: **Settings > Branches/Rules > New ruleset** (o **Add branch protection rule**), patrón `main`, opción **Require status checks to pass**, check `verificar`.
+2. Abrir las cuatro PR hacia `main`:
+   - https://github.com/juancruz0912/tienda-segura/pull/new/falla-test
+   - https://github.com/juancruz0912/tienda-segura/pull/new/falla-secreto
+   - https://github.com/juancruz0912/tienda-segura/pull/new/falla-codigo
+   - https://github.com/juancruz0912/tienda-segura/pull/new/falla-libreria
+3. Registrar la URL de cada PR y el paso que falla. Comprobar que el botón de fusión queda bloqueado mientras `verificar` está en rojo.
+4. Corregir y fusionar las PR de test, código y librería. Cerrar la PR del token sin fusionarla y eliminar su rama.
+5. Añadir y demostrar los retos Trivy (configuración de Dockerfile) y ZAP (app ejecutándose) en PR posteriores. Para ZAP arrancar un servidor separado, sin hacer que `node --test` quede escuchando indefinidamente.
+
+La regla de fusión, la apertura de las cuatro PR, Trivy y ZAP siguen pendientes. Registrar las URLs de cada PR/check y sus evidencias al realizarlas.
