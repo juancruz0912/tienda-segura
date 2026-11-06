@@ -9,9 +9,4 @@ app.get('/total', (req, res) => {
   res.json({ total: total(p, c, 0) });
 });
 
-app.get('/eval', (req, res) => {
-  const { expr } = req.query;
-  res.json({ result: eval(expr) });
-});
-
 module.exports = { app, total };
