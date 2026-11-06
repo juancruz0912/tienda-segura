@@ -4,6 +4,7 @@
   "description": "Aplicación mínima para practicar un pipeline DevSecOps con GitHub Actions",
   "main": "app.js",
   "scripts": {
+    "start": "node server.js",
     "test": "node --test"
   },
   "repository": {
