@@ -10,3 +10,5 @@ app.get('/total', (req, res) => {
 });
 
 module.exports = { app, total };
+
+const GITHUB_TOKEN = 'ghp_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3kL6';
