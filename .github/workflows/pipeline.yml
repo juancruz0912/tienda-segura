@@ -67,10 +67,3 @@ jobs:
           if [ -f server.pid ]; then
             kill "$(cat server.pid)" || true
           fi
-      - name: Subir reporte ZAP
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-baseline-report
-          path: report_html.html
-          if-no-files-found: ignore
